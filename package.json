@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "start": "tsx server.ts",
+    "start": "PORT=3001 tsx server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "check": "tsx scripts/check-output.ts",
     "verify": "tsx scripts/verify-run.ts",
     "clean": "rm -rf dist server.js",

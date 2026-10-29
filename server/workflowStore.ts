@@ -20,6 +20,10 @@ class WorkflowManager {
     return this.state;
   }
 
+  reset(): void {
+    this.state = "Draft";
+  }
+
   getLogs(): WorkflowLogEntry[] {
     return [...this.logs];
   }

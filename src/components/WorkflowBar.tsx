@@ -116,7 +116,8 @@ export const WorkflowBar: React.FC<WorkflowBarProps> = ({
               type="button"
               disabled={submitting}
               onClick={() => handleQuickAction('Submitted')}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              className="px-3 py-1.5 hover:opacity-90 disabled:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              style={{ backgroundColor: '#a90000' }}
             >
               <Send className="w-3.5 h-3.5" />
               <span>Submit to Reviewer</span>

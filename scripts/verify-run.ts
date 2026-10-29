@@ -5,7 +5,20 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 
-const base = process.env.API_URL ?? "http://localhost:3001/api/v1";
+let base = process.env.API_URL;
+if (!base) {
+  try {
+    const check = await fetch("http://localhost:3001/api/v1/health", { signal: AbortSignal.timeout(800) });
+    if (check.ok) base = "http://localhost:3001/api/v1";
+  } catch {}
+  if (!base) {
+    try {
+      const check2 = await fetch("http://localhost:3000/api/v1/health", { signal: AbortSignal.timeout(800) });
+      if (check2.ok) base = "http://localhost:3000/api/v1";
+    } catch {}
+  }
+  if (!base) base = "http://localhost:3001/api/v1";
+}
 const provider = process.argv[2] ?? process.env.LLM_PROVIDER ?? "gemini";
 const key = process.argv[3] ?? process.env.LLM_KEY ?? "";
 if (!key) { console.error("Usage: npm run verify -- gemini YOUR_KEY   (or openrouter / anthropic)"); process.exit(1); }

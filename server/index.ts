@@ -161,6 +161,11 @@ api.get("/workflow", (_req: Request, res: Response) => {
   });
 });
 
+api.post("/workflow/reset", (_req: Request, res: Response) => {
+  workflowStore.reset();
+  ok(res, { state: workflowStore.getState() });
+});
+
 api.post("/workflow/transition", (req: Request, res: Response, next: NextFunction) => {
   try {
     const { toState, role, user, comment } = req.body;
@@ -187,6 +192,16 @@ api.post("/workflow/comment", (req: Request, res: Response, next: NextFunction) 
     ok(res, comment);
   } catch (e) {
     next(e);
+  }
+});
+
+api.post("/check-edit-permission", (req: Request, res: Response) => {
+  try {
+    const { role } = req.body;
+    workflowStore.assertCanEditContent(role);
+    ok(res, { allowed: true });
+  } catch (e: any) {
+    fail(res, 403, "FORBIDDEN", e.message);
   }
 });
 

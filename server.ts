@@ -175,6 +175,11 @@ api.get("/workflow", (_req: Request, res: Response) => {
   });
 });
 
+api.post("/workflow/reset", (_req: Request, res: Response) => {
+  workflowStore.reset();
+  ok(res, { state: workflowStore.getState() });
+});
+
 api.post("/workflow/transition", (req: Request, res: Response, next: NextFunction) => {
   try {
     const { toState, role, user, comment } = req.body;
