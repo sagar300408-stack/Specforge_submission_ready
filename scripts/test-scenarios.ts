@@ -106,7 +106,7 @@ async function runAllTests() {
     hasExplicitCredits: true,
   };
 
-  const fourCoMap = generateCoPoPsoMap(fourCoData.course_outcomes, fourCoData.units);
+  const fourCoMap = await generateCoPoPsoMap(fourCoData.course_outcomes, fourCoData.units);
   assert(Object.keys(fourCoMap).length === 4, "4-CO mapping matrix generated exactly 4 rows");
   const fourCoReport = inspectCourseSpec(fourCoData, fourCoMap, "integrated");
   assert(fourCoReport.rules.find((r) => r.id === "V1")?.status === "PASS", "V1 passes for 4-CO course");
@@ -139,7 +139,7 @@ async function runAllTests() {
       },
     },
   };
-  const sixCoMap = generateCoPoPsoMap(sixCoData.course_outcomes, sixCoData.units);
+  const sixCoMap = await generateCoPoPsoMap(sixCoData.course_outcomes, sixCoData.units);
   assert(Object.keys(sixCoMap).length === 6, "6-CO mapping matrix generated exactly 6 rows");
   const sixCoReport = inspectCourseSpec(sixCoData, sixCoMap, "integrated");
   assert(sixCoReport.rules.find((r) => r.id === "V1")?.status === "PASS", "V1 passes for 6-CO course");
@@ -153,7 +153,7 @@ async function runAllTests() {
     { number: 2, title: "Fluid Kinematics", hours: 15, content: "Velocity field, continuity equation, streamline analysis.", lab: null },
     { number: 3, title: "Fluid Dynamics", hours: 15, content: "Bernoulli equation, Navier-Stokes equations, pipe flow.", lab: null },
   ];
-  const nonCsSummary = generateComprehensiveSummary("Fluid Mechanics", nonCsUnits, "Core Course");
+  const nonCsSummary = await generateComprehensiveSummary("Fluid Mechanics", nonCsUnits, "Core Course");
   assert(!nonCsSummary.toLowerCase().includes("python"), "Non-CS summary does not fabricate Python");
   assert(!nonCsSummary.toLowerCase().includes("software"), "Non-CS summary does not fabricate software");
   assert(!nonCsSummary.toLowerCase().includes("opencv"), "Non-CS summary does not fabricate OpenCV");
@@ -207,7 +207,7 @@ async function runAllTests() {
   const unevidencedCos = [
     { id: "CO-1", statement: "Attend weekly orientation lectures quietly without participation.", bloom_level: 1 },
   ];
-  const unevidencedMap = generateCoPoPsoMap(unevidencedCos, []);
+  const unevidencedMap = await generateCoPoPsoMap(unevidencedCos, []);
   const co1Cells = unevidencedMap["CO-1"];
   const mappedPoCount = Object.keys(co1Cells).filter((k) => k.startsWith("PO-") && co1Cells[k] !== null).length;
   assert(mappedPoCount === 0, `Unevidenced CO retains null PO mappings (mapped: ${mappedPoCount})`);
@@ -223,7 +223,7 @@ async function runAllTests() {
   // -------------------------------------------------------------
   // Test 8: Template Rendering for integrated_lab and non_lab
   // -------------------------------------------------------------
-  const realParsedMap = generateCoPoPsoMap(realParsed.course_outcomes, realParsed.units);
+  const realParsedMap = await generateCoPoPsoMap(realParsed.course_outcomes, realParsed.units);
   const renderedLab = fillCourseTemplate(realParsed, realParsedMap, "integrated");
   const $lab = cheerio.load(renderedLab);
   const labAssessTable = $lab("table.assessment-integrated-table");

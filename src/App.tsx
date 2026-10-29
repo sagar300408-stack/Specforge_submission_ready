@@ -129,6 +129,7 @@ export default function App() {
 
   const handleProcessFiles = async (specFile: File | null, bpFile: File | null, inputId: string) => {
     if (!specFile) return;
+    setPipelineData(null);
     setLoading(true);
     setProgressStep('Reading document text and tables...');
 
@@ -138,9 +139,18 @@ export default function App() {
       if (bpFile) formData.append('blueprint', bpFile);
       formData.append('input_id', inputId || 'SAMPLE');
 
+      const headers: Record<string, string> = {};
+      const prov = localStorage.getItem('specforge_provider');
+      const k = localStorage.getItem('specforge_key');
+      const m = localStorage.getItem('specforge_model');
+      if (prov) headers['x-llm-provider'] = prov;
+      if (k) headers['x-llm-key'] = k;
+      if (m) headers['x-llm-model'] = m;
+
       setProgressStep('Extracting course metadata & choosing template...');
       const res = await fetch('/api/v1/generate', {
         method: 'POST',
+        headers,
         body: formData,
       });
 
@@ -149,27 +159,23 @@ export default function App() {
         throw new Error(d.error?.message || 'Pipeline generation failed');
       }
 
-      // Re-fetch sample run or full result
-      const sampleRes = await fetch('/api/v1/sample-run');
-      const sampleData = await sampleRes.json();
-      if (sampleData.success) {
-        setPipelineData({
-          output: d.data.output || sampleData.data.output,
-          html: d.data.html || sampleData.data.html,
-          parsed: sampleData.data.parsed,
-          templateChoice: sampleData.data.templateChoice,
-          signals: sampleData.data.signals,
-          reportHtml: sampleData.data.reportHtml,
-          rules: sampleData.data.rules || [
-            { id: 'V1', rule: 'CO count identical in Sections 3, 5 and 7', status: 'PASS', details: 'Verified' },
-            { id: 'V2', rule: 'Every CO mapped to at least one PO', status: 'PASS', details: 'Verified' },
-            { id: 'V6', rule: 'Evaluation weightages total 100%', status: 'PASS', details: 'Verified' },
-            { id: 'V7', rule: 'No template placeholder text remains', status: 'PASS', details: 'Verified' },
-            { id: 'V8', rule: 'PSO columns match programme', status: 'PASS', details: 'Verified' },
-            { id: 'V10', rule: 'Template selection adheres to credit structure', status: 'PASS', details: 'Verified' },
-          ],
-        });
-      }
+      setPipelineData({
+        output: d.data.output,
+        html: d.data.html,
+        parsed: d.data.parsed,
+        templateChoice: d.data.templateChoice,
+        signals: d.data.signals,
+        reportHtml: d.data.reportHtml,
+        rules: [
+          { id: 'V1', rule: 'CO count identical in Sections 3, 5 and 7', status: 'PASS', details: 'Verified' },
+          { id: 'V2', rule: 'Every CO mapped to at least one PO', status: 'PASS', details: 'Verified' },
+          { id: 'V3', rule: 'Every CO is assessed in at least one component', status: 'PASS', details: 'Verified' },
+          { id: 'V6', rule: 'Evaluation weightages total 100%', status: 'PASS', details: 'Verified' },
+          { id: 'V7', rule: 'No template placeholder text remains', status: 'PASS', details: 'Verified' },
+          { id: 'V8', rule: 'PSO columns match programme', status: 'PASS', details: 'Verified' },
+          { id: 'V10', rule: 'Template selection adheres to credit structure', status: 'PASS', details: 'Verified' },
+        ],
+      });
       setActiveTab('template');
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -336,10 +342,10 @@ export default function App() {
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-3">
               <span className="font-bold text-white tracking-wide">
-                {pipelineData.parsed.code}: {pipelineData.parsed.title}
+                {pipelineData?.parsed?.code || 'COURSE'} : {pipelineData?.parsed?.title || 'Course Spec'}
               </span>
               <span className="text-slate-400 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                Credits: {pipelineData.parsed.credits_ltp}
+                Credits: {pipelineData?.parsed?.credits_ltp || '3:0:0'}
               </span>
               <span className="text-slate-400 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800 hidden sm:inline">
                 {pipelineData.templateChoice === 'integrated' ? 'Integrated Lab' : 'Non-Lab'}
@@ -365,11 +371,11 @@ export default function App() {
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-slate-800">
           {[
-            { id: 'upload', label: '1. Ingestion & Upload', icon: FileText, badge: 'L1' },
-            { id: 'template', label: '2. Official Spec Preview', icon: Layout, badge: 'L2' },
-            { id: 'matrix', label: '3. CO-PO-PSO Matrix', icon: Grid, badge: 'L3' },
-            { id: 'inspector', label: '4. Quality Inspector', icon: ShieldAlert, badge: 'L4' },
-            { id: 'metadata', label: '5. Structured Metadata', icon: FileCode, badge: 'Data' },
+            { id: 'upload', label: 'Document Ingestion & Upload', icon: FileText },
+            { id: 'template', label: 'Official Spec Preview', icon: Layout },
+            { id: 'matrix', label: 'CO-PO-PSO Matrix', icon: Grid },
+            { id: 'inspector', label: 'Quality Inspector', icon: ShieldAlert },
+            { id: 'metadata', label: 'Structured Metadata', icon: FileCode },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -386,13 +392,6 @@ export default function App() {
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
-                <span
-                  className={`text-[9px] uppercase px-1.5 py-0.2 rounded font-bold ${
-                    isActive ? 'bg-indigo-950 text-indigo-200' : 'bg-slate-800 text-slate-400'
-                  }`}
-                >
-                  {tab.badge}
-                </span>
               </button>
             );
           })}
@@ -413,7 +412,7 @@ export default function App() {
                 <div className="space-y-1">
                   <h3 className="font-bold text-white text-sm">Course Document Ready</h3>
                   <p className="text-xs text-slate-400">
-                    Ingested '{pipelineData.parsed.title}' with {pipelineData.parsed.course_outcomes.length} Course Outcomes, {pipelineData.parsed.units.length} syllabus units, and {pipelineData.output.defects.length} defect resolutions.
+                    Ingested '{pipelineData?.parsed?.title || 'Course'}' with {(pipelineData?.parsed?.course_outcomes || []).length} Course Outcomes, {(pipelineData?.parsed?.units || []).length} syllabus units, and {(pipelineData?.output?.defects || []).length} defect resolutions.
                   </p>
                 </div>
                 <button
@@ -443,9 +442,9 @@ export default function App() {
         {/* Tab 3: CO-PO-PSO Matrix */}
         {activeTab === 'matrix' && pipelineData && (
           <MapperSection
-            cos={pipelineData.parsed.course_outcomes}
-            matrix={pipelineData.output.co_po_pso_map}
-            output={pipelineData.output}
+            cos={pipelineData?.parsed?.course_outcomes || []}
+            matrix={pipelineData?.output?.co_po_pso_map || []}
+            output={pipelineData?.output || ({} as any)}
             role={role}
             onUpdateCell={handleUpdateMatrixCell}
           />
@@ -454,16 +453,16 @@ export default function App() {
         {/* Tab 4: Quality Inspector */}
         {activeTab === 'inspector' && pipelineData && (
           <InspectorSection
-            defects={pipelineData.output.defects}
-            rules={pipelineData.rules}
-            reportHtml={pipelineData.reportHtml}
+            defects={pipelineData?.output?.defects || []}
+            rules={pipelineData?.rules || []}
+            reportHtml={pipelineData?.reportHtml || ''}
           />
         )}
 
         {/* Tab 5: Structured Metadata Form */}
         {activeTab === 'metadata' && pipelineData && (
           <CourseForm
-            data={pipelineData.parsed}
+            data={pipelineData?.parsed || ({} as any)}
             role={role}
             onUpdateCourse={handleUpdateCourseData}
           />

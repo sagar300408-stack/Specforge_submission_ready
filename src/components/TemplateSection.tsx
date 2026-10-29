@@ -61,9 +61,6 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white">Template Engine & Official Document Preview</h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-              Level 2 Template
-            </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Official university layout with sample placeholder scrubbing and dynamic DRAFT watermark
@@ -107,7 +104,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
             <span className="font-semibold text-slate-300">Signals used:</span>
-            {signals.map((sig, idx) => (
+            {(signals || []).map((sig, idx) => (
               <span key={idx} className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-300 text-[11px]">
                 &bull; {sig}
               </span>

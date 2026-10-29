@@ -7,6 +7,7 @@ import { inspectCourseSpec } from "./inspector.js";
 import { fillCourseTemplate } from "./templateFiller.js";
 import { workflowStore } from "./workflowStore.js";
 import type { SpecForgeOutput, ParsedCourseData } from "./types.js";
+import type { LlmConfig } from "./llm.js";
 
 export interface PipelineResult {
   output: SpecForgeOutput;
@@ -25,6 +26,7 @@ export async function runSpecForgePipeline(params: {
   templateOverride?: "integrated" | "non_lab" | null;
   overrideReason?: string;
   inputId?: string;
+  llmConfig?: LlmConfig;
 }): Promise<PipelineResult> {
   // 1. Extract raw texts
   const specDoc = await extractTextFromFile(params.specBuffer, params.specFilename);
@@ -37,8 +39,6 @@ export async function runSpecForgePipeline(params: {
   const parsed = parseCourseDocuments(specDoc.text, blueprintDoc?.text || null, specDoc.html || null);
 
   // 3. Template Selection Logic:
-  // Rule: A non-zero Practical value in the credit structure (e.g. 3:0:1) or a course type containing 'laboratory'
-  // means the Integrated template; otherwise Non-Lab.
   const parts = parsed.credits_ltp.split(":").map((p) => parseInt(p, 10) || 0);
   const practicalCredits = parts[2] || 0;
   const isLabType = parsed.course_type.toLowerCase().includes("laboratory");
@@ -60,11 +60,11 @@ export async function runSpecForgePipeline(params: {
   const templateChoice: "integrated" | "non_lab" =
     params.templateOverride || detectedTemplate;
 
-  // 4. Generate comprehensive summary covering all syllabus units
-  parsed.summary = generateComprehensiveSummary(parsed.title, parsed.units, parsed.course_type);
+  // 4. Generate comprehensive summary (AI-assisted with deterministic fallback)
+  parsed.summary = await generateComprehensiveSummary(parsed.title, parsed.units, parsed.course_type, params.llmConfig);
 
-  // 5. Generate CO-PO-PSO Matrix
-  const matrix = generateCoPoPsoMap(parsed.course_outcomes, parsed.units);
+  // 5. Generate CO-PO-PSO Matrix (AI-assisted with deterministic fallback)
+  const matrix = await generateCoPoPsoMap(parsed.course_outcomes, parsed.units, params.llmConfig);
 
   // 6. Inspect & detect defects according to Rules V1 to V10
   const inspection = inspectCourseSpec(

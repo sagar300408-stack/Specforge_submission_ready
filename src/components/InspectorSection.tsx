@@ -117,7 +117,7 @@ export const InspectorSection: React.FC<InspectorSectionProps> = ({
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          {rules.map((r) => (
+          {(rules || []).map((r) => (
             <div
               key={r.id}
               className="bg-slate-950 border border-slate-800/80 rounded-xl p-3 flex items-start gap-3"
@@ -163,7 +163,7 @@ export const InspectorSection: React.FC<InspectorSectionProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/80">
-              {defects.map((d, idx) => (
+              {(defects || []).map((d, idx) => (
                 <tr key={idx} className="hover:bg-slate-900/40 transition">
                   <td className="p-3 font-mono font-bold text-indigo-300 whitespace-nowrap">
                     {d.code}

@@ -107,6 +107,11 @@ api.post(
       const override = (req.body.templateOverride as "integrated" | "non_lab") || null;
       const overrideReason = req.body.overrideReason || "";
 
+      let llmConfig: any = undefined;
+      try {
+        llmConfig = configFromRequest(req);
+      } catch {}
+
       const result = await runSpecForgePipeline({
         specBuffer: specFile.buffer,
         specFilename: specFile.originalname,
@@ -115,6 +120,7 @@ api.post(
         templateOverride: override,
         overrideReason,
         inputId: req.body.input_id || "SAMPLE",
+        llmConfig,
       });
 
       ok(res, result);

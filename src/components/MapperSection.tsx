@@ -73,9 +73,6 @@ export const MapperSection: React.FC<MapperSectionProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white">CO-PO-PSO Articulation Matrix</h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Level 3 Mapper
-            </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Correlates each Course Outcome with Programme Outcomes and Programme Specific Outcomes with justification tooltips

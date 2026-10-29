@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import { z } from "zod";
+import { generateJson, type LlmConfig } from "./llm.js";
 import type { CourseOutcome, CoPoPsoCell, Unit } from "./types.js";
 
 // Load reference POs and PSOs
@@ -17,10 +19,51 @@ try {
   // fallback
 }
 
-export function generateCoPoPsoMap(
+const aiMatrixSchema = z.record(
+  z.string(),
+  z.record(
+    z.string(),
+    z.object({
+      level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+      justification: z.string(),
+    }).nullable()
+  )
+);
+
+export async function generateCoPoPsoMap(
   cos: CourseOutcome[],
-  units: Unit[]
-): Record<string, Record<string, CoPoPsoCell | null>> {
+  units: Unit[],
+  llmConfig?: LlmConfig
+): Promise<Record<string, Record<string, CoPoPsoCell | null>>> {
+  if (llmConfig) {
+    try {
+      const prompt = `You are an academic curriculum mapping expert.
+Given the following Course Outcomes (COs) and syllabus units, generate a CO-PO-PSO articulation matrix mapping each CO (CO-1 to CO-n) to Programme Outcomes (PO-1 through PO-11) and Programme Specific Outcomes (PSO-1, PSO-2).
+Scale: 3 (Very Strong), 2 (Strong), 1 (Moderate), or null (No relation).
+Every mapped cell must include a concise, evidence-based one-line justification referencing the CO statement and PO/PSO definition.
+
+Configured POs and PSOs:
+${JSON.stringify(poPsoConfig, null, 2)}
+
+Course Outcomes:
+${JSON.stringify(cos, null, 2)}
+
+Syllabus Units:
+${JSON.stringify(units, null, 2)}
+
+Return strictly valid JSON matching this schema:
+Record<string, Record<string, { level: 1|2|3, justification: string } | null>>.`;
+
+      const aiResult = await generateJson(prompt, aiMatrixSchema, llmConfig);
+      if (aiResult && typeof aiResult === "object") {
+        return aiResult as Record<string, Record<string, CoPoPsoCell | null>>;
+      }
+    } catch (e) {
+      console.warn("AI mapping generation failed or timed out, falling back to deterministic rules:", (e as Error).message);
+    }
+  }
+
+  // Deterministic fallback
   const matrix: Record<string, Record<string, CoPoPsoCell | null>> = {};
   const poList = poPsoConfig.pos || [];
   const psoList = poPsoConfig.psos || [];
@@ -94,11 +137,24 @@ export function generateCoPoPsoMap(
   return matrix;
 }
 
-export function generateComprehensiveSummary(
+export async function generateComprehensiveSummary(
   title: string,
   units: Unit[],
-  courseType: string
-): string {
+  courseType: string,
+  llmConfig?: LlmConfig
+): Promise<string> {
+  if (llmConfig) {
+    try {
+      const prompt = `Write a comprehensive academic course summary for the course "${title}" (Type: ${courseType}) based on the following syllabus units:
+${JSON.stringify(units, null, 2)}
+The summary must be professional, descriptive, grounded in the syllabus topics, and free of fabricated external facts. Return JSON: { "summary": "..." }`;
+      const aiRes = await generateJson(prompt, z.object({ summary: z.string() }), llmConfig);
+      if (aiRes?.summary) return aiRes.summary;
+    } catch (e) {
+      console.warn("AI summary generation failed, using deterministic summary:", (e as Error).message);
+    }
+  }
+
   const unitList = units.map((u) => `Unit ${u.number}: ${u.title}`).filter(Boolean).join("; ");
   let summary = `This course covers ${title}. The curriculum comprises: ${unitList}.`;
   const hasLab = units.some((u) => typeof u.lab === "string" && u.lab.trim().length > 0);

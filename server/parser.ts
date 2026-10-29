@@ -43,24 +43,59 @@ export function parseCourseDocuments(
   blueprintText?: string | null,
   specHtml?: string | null
 ): ParsedCourseData {
-  // 1. Course Title
-  const titleMatch = specText.match(/Course Title\s*[:\n\r]+\s*([^\n\r\t]+)/i);
-  const title = titleMatch ? titleMatch[1].trim() : "UNKNOWN_TITLE";
+  let title = "UNKNOWN_TITLE";
+  let code = "UNKNOWN_CODE";
+  let course_type = "Core Course";
+  let department = "UNKNOWN_DEPARTMENT";
+  let faculty = "UNKNOWN_FACULTY";
 
-  // 2. Course Code
-  const codeMatch = specText.match(/Course Code\s*[:\n\r]+\s*([A-Za-z0-9_-]+)/i) || specText.match(/\b([A-Z]{2,4}\d{3,4}[A-Z]?)\b/);
-  const code = codeMatch ? codeMatch[1].trim() : "UNKNOWN_CODE";
+  if (specHtml) {
+    const $ = cheerio.load(specHtml);
+    $("tr").each((_, tr) => {
+      const tds = $(tr).find("td, th").toArray();
+      for (let i = 0; i < tds.length; i++) {
+        const cellText = $(tds[i]).text().trim().toLowerCase();
+        if (cellText.includes("course title") && tds[i + 1]) {
+          const val = $(tds[i + 1]).text().trim();
+          if (val) title = val;
+        } else if (cellText.includes("course code") && tds[i + 1]) {
+          const val = $(tds[i + 1]).text().trim();
+          if (val) code = val;
+        } else if (cellText.includes("course type") && tds[i + 1]) {
+          const val = $(tds[i + 1]).text().trim();
+          if (val) course_type = val;
+        } else if (cellText.includes("department") && tds[i + 1]) {
+          const val = $(tds[i + 1]).text().trim();
+          if (val) department = val;
+        } else if (cellText.includes("faculty") && tds[i + 1]) {
+          const val = $(tds[i + 1]).text().trim();
+          if (val) faculty = val;
+        }
+      }
+    });
+  }
 
-  // 3. Course Type
-  const typeMatch = specText.match(/Course Type\s*[:\n\r]+\s*([^\n\r\t]+)/i);
-  const course_type = typeMatch ? typeMatch[1].trim() : "Core Course";
-
-  // 4. Department & Faculty
-  const deptMatch = specText.match(/Department\s*[:\n\r]+\s*([^\n\r\t]+)/i);
-  const department = deptMatch ? deptMatch[1].trim() : "UNKNOWN_DEPARTMENT";
-
-  const facMatch = specText.match(/Faculty\s*[:\n\r]+\s*([^\n\r\t]+)/i);
-  const faculty = facMatch ? facMatch[1].trim() : "UNKNOWN_FACULTY";
+  // Fallbacks if not found via HTML tables
+  if (title === "UNKNOWN_TITLE") {
+    const titleMatch = specText.match(/Course Title\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+    if (titleMatch) title = titleMatch[1].trim();
+  }
+  if (code === "UNKNOWN_CODE") {
+    const codeMatch = specText.match(/Course Code\s*[:\n\r]+\s*([A-Za-z0-9_-]+)/i) || specText.match(/\b([A-Z]{2,4}\d{3,4}[A-Z]?)\b/);
+    if (codeMatch) code = codeMatch[1].trim();
+  }
+  if (course_type === "Core Course") {
+    const typeMatch = specText.match(/Course Type\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+    if (typeMatch) course_type = typeMatch[1].trim();
+  }
+  if (department === "UNKNOWN_DEPARTMENT") {
+    const deptMatch = specText.match(/Department\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+    if (deptMatch) department = deptMatch[1].trim();
+  }
+  if (faculty === "UNKNOWN_FACULTY") {
+    const facMatch = specText.match(/Faculty\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+    if (facMatch) faculty = facMatch[1].trim();
+  }
 
   // 5. Credits LTP & Total Credits
   const ltpMatch = specText.match(/Credit Structure[^\d]*(\d+\s*:\s*\d+\s*:\s*\d+)/i) || specText.match(/\b(\d+:\d+:\d+)\b/);
@@ -299,6 +334,7 @@ export function parseCourseDocuments(
     total_hours: teaching_hours.total || total_hours,
     course_type,
     summary,
+    original_summary: summary,
     course_outcomes,
     units,
     teaching_hours,

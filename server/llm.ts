@@ -7,8 +7,8 @@ export type Provider = "gemini" | "openrouter" | "anthropic";
 export type LlmConfig = { provider: Provider; key: string; model: string };
 
 export const DEFAULT_MODELS = {
-  gemini: "gemini-2.5-flash",
-  openrouter: "google/gemini-2.5-flash",
+  gemini: "gemini-3.8-flash",
+  openrouter: "google/gemini-3.8-flash",
   anthropic: "claude-sonnet-5-5",
 } as const;
 
@@ -17,13 +17,17 @@ export function configFromRequest(req: Request): LlmConfig {
   let key = String(req.header("x-llm-key") ?? "").trim();
   let model = String(req.header("x-llm-model") ?? "").trim();
 
+  console.log(`[LLM Config] Request headers received -> provider: '${provider}', key present: ${Boolean(key)}, model: '${model}'`);
+
   // If no key provided in headers, fallback to process.env.GEMINI_API_KEY
   if (!key && process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY") {
     key = process.env.GEMINI_API_KEY;
     provider = "gemini";
+    console.log(`[LLM Config] Fallback to process.env.GEMINI_API_KEY (key length: ${key.length})`);
   }
 
   if (!key) {
+    console.error(`[LLM Config Error] Missing API key in request and environment.`);
     throw new ApiError(400, "MISSING_KEY", "Add your key in Settings.");
   }
 
@@ -31,11 +35,13 @@ export function configFromRequest(req: Request): LlmConfig {
     provider = "gemini";
   }
 
-  return {
+  const resolvedConfig = {
     provider,
     key,
-    model: model || (DEFAULT_MODELS[provider] ?? "gemini-2.5-flash"),
+    model: model || (DEFAULT_MODELS[provider] ?? "gemini-3.8-flash"),
   };
+  console.log(`[LLM Config] Resolved active config -> provider: ${resolvedConfig.provider}, model: ${resolvedConfig.model}`);
+  return resolvedConfig;
 }
 
 function stripFences(text: string): string {
@@ -43,14 +49,22 @@ function stripFences(text: string): string {
 }
 
 async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
+  console.log(`[LLM Call] Dispatching prompt to provider '${cfg.provider}' using model '${cfg.model}' (prompt length: ${prompt.length} chars)`);
   if (cfg.provider === "gemini") {
     try {
       const ai = new GoogleGenAI({ apiKey: cfg.key });
-      const r = await ai.models.generateContent({
-        model: cfg.model || "gemini-2.5-flash",
-        contents: prompt,
-        config: { responseMimeType: "application/json" },
-      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("LLM request timed out after 60s")), 60000)
+      );
+      const r: any = await Promise.race([
+        ai.models.generateContent({
+          model: cfg.model || "gemini-3.8-flash",
+          contents: prompt,
+          config: { responseMimeType: "application/json" },
+        }),
+        timeoutPromise,
+      ]);
+      console.log(`[LLM Call] Success from Gemini provider (response length: ${r.text?.length || 0} chars)`);
       return r.text ?? "";
     } catch (e: any) {
       const status = Number(e?.status ?? e?.code ?? 0);
@@ -77,6 +91,7 @@ async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
         max_tokens: 8000,
         messages: [{ role: "user", content: prompt }],
       }),
+      signal: AbortSignal.timeout(60000),
     });
     if (r.status === 429 || r.status === 529) {
       throw new ApiError(429, "RATE_LIMITED", "The AI provider says too many requests. Wait a minute or switch model.");
@@ -102,6 +117,7 @@ async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     }),
+    signal: AbortSignal.timeout(60000),
   });
   if (r.status === 429) {
     throw new ApiError(429, "RATE_LIMITED", "The AI provider says too many requests. Wait a minute or switch model.");

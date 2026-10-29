@@ -60,6 +60,11 @@ api.post(
       const override = (req.body.templateOverride as "integrated" | "non_lab") || null;
       const overrideReason = req.body.overrideReason || "";
 
+      let llmConfig: any = undefined;
+      try {
+        llmConfig = configFromRequest(req);
+      } catch {}
+
       const result = await runSpecForgePipeline({
         specBuffer: specFile.buffer,
         specFilename: specFile.originalname,
@@ -68,6 +73,7 @@ api.post(
         templateOverride: override,
         overrideReason,
         inputId: req.body.input_id || "SAMPLE",
+        llmConfig,
       });
 
       ok(res, result);
@@ -87,6 +93,9 @@ api.post(
     { name: "blueprint", maxCount: 1 },
   ]),
   async (req: Request, res: Response, next: NextFunction) => {
+    const reqId = Math.random().toString(36).substring(2, 8);
+    const startTime = Date.now();
+    console.log(`[Req ${reqId}] POST /api/v1/generate received`);
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       let specFile = files?.["spec"]?.[0];
@@ -100,6 +109,7 @@ api.post(
       if (specFile) {
         specBuffer = specFile.buffer;
         specFilename = specFile.originalname;
+        console.log(`[Req ${reqId}] Spec file extracted: ${specFilename} (${specBuffer.length} bytes, elapsed: ${Date.now() - startTime}ms)`);
       } else {
         throw new ApiError(400, "MISSING_SPEC", "Course specification file ('spec') is required.");
       }
@@ -107,15 +117,24 @@ api.post(
       if (blueprintFile) {
         bpBuffer = blueprintFile.buffer;
         bpFilename = blueprintFile.originalname;
+        console.log(`[Req ${reqId}] Blueprint file extracted: ${bpFilename} (${bpBuffer.length} bytes, elapsed: ${Date.now() - startTime}ms)`);
       }
 
+      let llmConfig: any = undefined;
+      try {
+        llmConfig = configFromRequest(req);
+      } catch {}
+
+      console.log(`[Req ${reqId}] Starting SpecForge pipeline (elapsed: ${Date.now() - startTime}ms)`);
       const result = await runSpecForgePipeline({
         specBuffer,
         specFilename,
         blueprintBuffer: bpBuffer,
         blueprintFilename: bpFilename,
         inputId: (req.body.input_id as string) || "SAMPLE",
+        llmConfig,
       });
+      console.log(`[Req ${reqId}] Pipeline completed successfully (elapsed: ${Date.now() - startTime}ms)`);
 
       // Save to outputs/ for verify-run.ts & check-output.ts
       if (!fs.existsSync("outputs")) fs.mkdirSync("outputs", { recursive: true });
@@ -128,8 +147,14 @@ api.post(
       ok(res, {
         output: result.output,
         html: result.html,
+        parsed: result.parsed,
+        templateChoice: result.templateChoice,
+        signals: result.signals,
+        reportHtml: result.reportHtml,
       });
+      console.log(`[Req ${reqId}] Response sent successfully (total elapsed: ${Date.now() - startTime}ms)`);
     } catch (e) {
+      console.error(`[Req ${reqId}] Error in /generate (elapsed: ${Date.now() - startTime}ms):`, e instanceof Error ? e.message : e);
       next(e);
     }
   }
