@@ -55,6 +55,48 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadPdf = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to download the PDF spec.');
+      return;
+    }
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>SpecForge Course Specification PDF</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; margin: 20px; color: #111; line-height: 1.5; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 13px; text-align: left; }
+            th { background-color: #f1f5f9; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 18px;">SpecForge Official Academic Specification</h2>
+            <button onclick="window.print()" style="background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Save as PDF / Print</button>
+          </div>
+          <hr class="no-print" style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;" />
+          ${html}
+          <script>
+            window.onload = function() {
+              setTimeout(() => {
+                window.print();
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
@@ -75,6 +117,15 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
           >
             <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
             <span>Manual Override</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
           </button>
 
           <button
