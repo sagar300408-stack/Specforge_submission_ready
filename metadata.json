@@ -1,0 +1,6 @@
+{
+  "name": "GitHub Repo to Web Converter",
+  "description": "Transform any GitHub repository into a live web application, product showcase, interactive demo, or portfolio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

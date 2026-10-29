@@ -1,0 +1,346 @@
+{
+  "schema_version": "1.0",
+  "input_id": "SAMPLE",
+  "template": "integrated",
+  "course": {
+    "title": "Introduction to Computer Science and Engineering",
+    "code": "CSD103B",
+    "department": "Computer Science and Engineering",
+    "credits_ltp": "3:0:1",
+    "course_type": "Core Theory and laboratory",
+    "summary": "This course provides a rigorous, foundational introduction to Introduction to Computer Science and Engineering. Designed for engineering disciplines, the syllabus systematically covers Introduction, Problem Solving using Computers, Building Blocks of Computer Programs, Elements of Computer Programming, Basic Algorithms, Basic Data Structures. Students develop competence in algorithmic reasoning, problem formulation, structural programming idioms, control flow, functions, testing, sorting and searching algorithms, as well as foundational linear data structures (arrays, stacks, queues). Theoretical principles are closely paired with practical programming lab experiences to prepare students for multi-domain engineering computation."
+  },
+  "course_outcomes": [
+    {
+      "id": "CO-1",
+      "statement": "Explain the fundamental concepts of computing, algorithms, programming, and data structures.",
+      "bloom_level": 2
+    },
+    {
+      "id": "CO-2",
+      "statement": "Apply pseudocode, flowchart and programming constructs to solve computable problems.",
+      "bloom_level": 3
+    },
+    {
+      "id": "CO-3",
+      "statement": "Analyze computational problems by selecting appropriate algorithms, programming constructs, and data structures for efficient solutions.",
+      "bloom_level": 4
+    },
+    {
+      "id": "CO-4",
+      "statement": "Evaluate various programming constructs and data structures.",
+      "bloom_level": 5
+    },
+    {
+      "id": "CO-5",
+      "statement": "Develop programmatic solutions for computable problems.",
+      "bloom_level": 6
+    }
+  ],
+  "units": [
+    {
+      "number": 1,
+      "title": "Introduction",
+      "lab": "Edit and execute Python programs using Python command line, Using IDE (Interactive mode, Script mode)"
+    },
+    {
+      "number": 2,
+      "title": "Problem Solving using Computers",
+      "lab": "on Problem Solving Using Computers."
+    },
+    {
+      "number": 3,
+      "title": "Building Blocks of Computer Programs",
+      "lab": "on Building Blocks of Computers."
+    },
+    {
+      "number": 4,
+      "title": "Elements of Computer Programming",
+      "lab": "on Problem Solving Using random number generation."
+    },
+    {
+      "number": 5,
+      "title": "Basic Algorithms",
+      "lab": "on Problem Solving Using Iterative and recursive algorithms."
+    },
+    {
+      "number": 6,
+      "title": "Basic Data Structures",
+      "lab": "Implement array operations (insertion, deletion, traversal and searching), stack operations (push, pop and peek) using arrays, queue operations (enqueue and dequeue) using arrays, and develop programs demonstrating stack and queue applications."
+    }
+  ],
+  "co_po_pso_map": {
+    "CO-1": {
+      "PO-1": {
+        "level": 2,
+        "justification": "Applies fundamental principles of engineering and computing to explain computational concepts."
+      },
+      "PO-2": null,
+      "PO-3": {
+        "level": 1,
+        "justification": "Designs algorithmic solutions, software components, and modular structures meeting technical requirements."
+      },
+      "PO-4": null,
+      "PO-5": {
+        "level": 1,
+        "justification": "Employs modern programming language environments, compiler tooling, and debugging IDEs."
+      },
+      "PO-6": null,
+      "PO-7": null,
+      "PO-8": null,
+      "PO-9": null,
+      "PO-10": null,
+      "PO-11": {
+        "level": 1,
+        "justification": "Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks."
+      },
+      "PSO-1": {
+        "level": 2,
+        "justification": "Applies core computer science algorithms, memory models, and data representation techniques."
+      },
+      "PSO-2": {
+        "level": 2,
+        "justification": "Constructs and validates robust software solutions using programming idioms and standard data structures."
+      }
+    },
+    "CO-2": {
+      "PO-1": {
+        "level": 3,
+        "justification": "Applies fundamental principles of engineering and computing to apply computational concepts."
+      },
+      "PO-2": {
+        "level": 2,
+        "justification": "Formulates and analyzes structured computational problems using systematic analytical techniques."
+      },
+      "PO-3": {
+        "level": 2,
+        "justification": "Designs algorithmic solutions, software components, and modular structures meeting technical requirements."
+      },
+      "PO-4": null,
+      "PO-5": {
+        "level": 2,
+        "justification": "Employs modern programming language environments, compiler tooling, and debugging IDEs."
+      },
+      "PO-6": null,
+      "PO-7": null,
+      "PO-8": null,
+      "PO-9": null,
+      "PO-10": null,
+      "PO-11": {
+        "level": 1,
+        "justification": "Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks."
+      },
+      "PSO-1": {
+        "level": 3,
+        "justification": "Applies core computer science algorithms, memory models, and data representation techniques."
+      },
+      "PSO-2": {
+        "level": 2,
+        "justification": "Constructs and validates robust software solutions using programming idioms and standard data structures."
+      }
+    },
+    "CO-3": {
+      "PO-1": {
+        "level": 3,
+        "justification": "Applies fundamental principles of engineering and computing to analyze computational concepts."
+      },
+      "PO-2": {
+        "level": 3,
+        "justification": "Formulates and analyzes structured computational problems using systematic analytical techniques."
+      },
+      "PO-3": {
+        "level": 2,
+        "justification": "Designs algorithmic solutions, software components, and modular structures meeting technical requirements."
+      },
+      "PO-4": {
+        "level": 1,
+        "justification": "Conducts empirical investigation and performance benchmarking of algorithmic choices."
+      },
+      "PO-5": {
+        "level": 2,
+        "justification": "Employs modern programming language environments, compiler tooling, and debugging IDEs."
+      },
+      "PO-6": null,
+      "PO-7": null,
+      "PO-8": null,
+      "PO-9": null,
+      "PO-10": null,
+      "PO-11": {
+        "level": 1,
+        "justification": "Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks."
+      },
+      "PSO-1": {
+        "level": 3,
+        "justification": "Applies core computer science algorithms, memory models, and data representation techniques."
+      },
+      "PSO-2": {
+        "level": 3,
+        "justification": "Constructs and validates robust software solutions using programming idioms and standard data structures."
+      }
+    },
+    "CO-4": {
+      "PO-1": {
+        "level": 3,
+        "justification": "Applies fundamental principles of engineering and computing to evaluate computational concepts."
+      },
+      "PO-2": {
+        "level": 3,
+        "justification": "Formulates and analyzes structured computational problems using systematic analytical techniques."
+      },
+      "PO-3": {
+        "level": 3,
+        "justification": "Designs algorithmic solutions, software components, and modular structures meeting technical requirements."
+      },
+      "PO-4": {
+        "level": 2,
+        "justification": "Conducts empirical investigation and performance benchmarking of algorithmic choices."
+      },
+      "PO-5": {
+        "level": 2,
+        "justification": "Employs modern programming language environments, compiler tooling, and debugging IDEs."
+      },
+      "PO-6": null,
+      "PO-7": null,
+      "PO-8": null,
+      "PO-9": null,
+      "PO-10": null,
+      "PO-11": {
+        "level": 1,
+        "justification": "Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks."
+      },
+      "PSO-1": {
+        "level": 3,
+        "justification": "Applies core computer science algorithms, memory models, and data representation techniques."
+      },
+      "PSO-2": {
+        "level": 3,
+        "justification": "Constructs and validates robust software solutions using programming idioms and standard data structures."
+      }
+    },
+    "CO-5": {
+      "PO-1": {
+        "level": 3,
+        "justification": "Applies fundamental principles of engineering and computing to develop computational concepts."
+      },
+      "PO-2": {
+        "level": 3,
+        "justification": "Formulates and analyzes structured computational problems using systematic analytical techniques."
+      },
+      "PO-3": {
+        "level": 3,
+        "justification": "Designs algorithmic solutions, software components, and modular structures meeting technical requirements."
+      },
+      "PO-4": {
+        "level": 2,
+        "justification": "Conducts empirical investigation and performance benchmarking of algorithmic choices."
+      },
+      "PO-5": null,
+      "PO-6": null,
+      "PO-7": null,
+      "PO-8": null,
+      "PO-9": null,
+      "PO-10": null,
+      "PO-11": {
+        "level": 1,
+        "justification": "Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks."
+      },
+      "PSO-1": {
+        "level": 3,
+        "justification": "Applies core computer science algorithms, memory models, and data representation techniques."
+      },
+      "PSO-2": {
+        "level": 3,
+        "justification": "Constructs and validates robust software solutions using programming idioms and standard data structures."
+      }
+    }
+  },
+  "teaching_hours": {
+    "lectures": 45,
+    "lab": 30,
+    "tests_exams": 0,
+    "total": 75
+  },
+  "assessment": {
+    "components": [
+      {
+        "name": "Continuous Evaluation (CE)",
+        "weight_percent": 60
+      },
+      {
+        "name": "Semester End Examination (SEE)",
+        "weight_percent": 25
+      },
+      {
+        "name": "Lab Semester End Examination (LSEE)",
+        "weight_percent": 15
+      }
+    ],
+    "co_coverage": {
+      "CO-1": [
+        "Tests",
+        "Written exam"
+      ],
+      "CO-2": [
+        "Tests",
+        "Written exam",
+        "Lab CE"
+      ],
+      "CO-3": [
+        "Tests",
+        "Written exam",
+        "Lab CE"
+      ],
+      "CO-4": [
+        "Assignments",
+        "Written exam",
+        "Lab CE"
+      ],
+      "CO-5": [
+        "Assignments",
+        "Lab CE",
+        "LSEE"
+      ]
+    }
+  },
+  "defects": [
+    {
+      "code": "PLACEHOLDER_TEXT",
+      "location": {
+        "source": "template",
+        "section": null
+      },
+      "description": "Template contained placeholder sample course text ('Computer Vision', 'AIC304A', 'AIML', etc.).",
+      "fix": "Scrubbed all sample template tokens and populated with genuine course data."
+    },
+    {
+      "code": "PSO_COLUMN_MISMATCH",
+      "location": {
+        "source": "spec",
+        "section": 5,
+        "refs": [
+          "PSO-3"
+        ]
+      },
+      "description": "Existing course spec contained obsolete or invalid 'PSO-3' column not part of the programme.",
+      "fix": "Eliminated PSO-3 column; preserved only official PSO-1 and PSO-2."
+    },
+    {
+      "code": "SECTION_NOT_IN_TEMPLATE",
+      "location": {
+        "source": "spec",
+        "section": 10
+      },
+      "description": "Non-standard Section 10 'Curriculum and Capabilities Skills' present in legacy course spec has no corresponding section in the official university template.",
+      "fix": "Omitted Section 10 from template output and archived details in validation report."
+    },
+    {
+      "code": "SUMMARY_SYLLABUS_MISMATCH",
+      "location": {
+        "source": "spec",
+        "section": 1
+      },
+      "description": "Original course summary was truncated and omitted critical unit topics (algorithms, testing, data structures).",
+      "fix": "Synthesized comprehensive course summary spanning all syllabus units."
+    }
+  ]
+}
