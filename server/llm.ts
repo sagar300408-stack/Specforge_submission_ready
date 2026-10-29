@@ -54,7 +54,7 @@ async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
     try {
       const ai = new GoogleGenAI({ apiKey: cfg.key });
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("LLM request timed out after 60s")), 60000)
+        setTimeout(() => reject(new Error("LLM request timed out after 20s")), 20000)
       );
       const r: any = await Promise.race([
         ai.models.generateContent({
@@ -91,7 +91,7 @@ async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
         max_tokens: 8000,
         messages: [{ role: "user", content: prompt }],
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(20000),
     });
     if (r.status === 429 || r.status === 529) {
       throw new ApiError(429, "RATE_LIMITED", "The AI provider says too many requests. Wait a minute or switch model.");
@@ -117,7 +117,7 @@ async function callProvider(prompt: string, cfg: LlmConfig): Promise<string> {
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(20000),
   });
   if (r.status === 429) {
     throw new ApiError(429, "RATE_LIMITED", "The AI provider says too many requests. Wait a minute or switch model.");

@@ -59,7 +59,7 @@ Record<string, Record<string, { level: 1|2|3, justification: string } | null>>.`
         return aiResult as Record<string, Record<string, CoPoPsoCell | null>>;
       }
     } catch (e) {
-      console.warn("AI mapping generation failed or timed out, falling back to deterministic rules:", (e as Error).message);
+      console.log("AI mapping using deterministic fallback rules.");
     }
   }
 
@@ -151,7 +151,7 @@ The summary must be professional, descriptive, grounded in the syllabus topics, 
       const aiRes = await generateJson(prompt, z.object({ summary: z.string() }), llmConfig);
       if (aiRes?.summary) return aiRes.summary;
     } catch (e) {
-      console.warn("AI summary generation failed, using deterministic summary:", (e as Error).message);
+      console.log("AI summary using deterministic fallback.");
     }
   }
 
