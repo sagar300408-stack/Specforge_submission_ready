@@ -34,7 +34,7 @@ export async function runSpecForgePipeline(params: {
   }
 
   // 2. Parse course data
-  const parsed = parseCourseDocuments(specDoc.text, blueprintDoc?.text || null);
+  const parsed = parseCourseDocuments(specDoc.text, blueprintDoc?.text || null, specDoc.html || null);
 
   // 3. Template Selection Logic:
   // Rule: A non-zero Practical value in the credit structure (e.g. 3:0:1) or a course type containing 'laboratory'

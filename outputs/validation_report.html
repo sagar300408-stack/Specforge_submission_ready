@@ -18,8 +18,8 @@
     <h1>SpecForge Automated Quality & Validation Audit</h1>
     <p><strong>Course:</strong> Introduction to Computer Science and Engineering (CSD103B) | <strong>Department:</strong> Computer Science and Engineering | <strong>Credit Structure:</strong> 3:0:1</p>
     <div style="display: flex; gap: 16px; margin-top: 16px;">
-      <span class="badge" style="background: #fee2e2; color: #991b1b;">High Defects: 0</span>
-      <span class="badge" style="background: #fef3c7; color: #92400e;">Medium Defects: 2</span>
+      <span class="badge" style="background: #fee2e2; color: #991b1b;">High Defects: 1</span>
+      <span class="badge" style="background: #fef3c7; color: #92400e;">Medium Defects: 4</span>
       <span class="badge" style="background: #dbeafe; color: #1e40af;">Low Defects: 2</span>
     </div>
   </div>
@@ -40,8 +40,8 @@
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 8px; font-weight: bold;">V1</td>
       <td style="padding: 8px;">CO count is identical in Sections 3, 5 and 7.</td>
-      <td style="padding: 8px; font-weight: bold; color: #059669;">PASS</td>
-      <td style="padding: 8px; font-size: 13px; color: #475569;">All sections consistently define 5 Course Outcomes (CO-1, CO-2, CO-3, CO-4, CO-5)</td>
+      <td style="padding: 8px; font-weight: bold; color: #dc2626;">FAIL</td>
+      <td style="padding: 8px; font-size: 13px; color: #475569;">Discrepancy in CO counts: Section 3 (5), Mapping (5), Assessment (6)</td>
     </tr>
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 8px; font-weight: bold;">V2</td>
@@ -58,8 +58,8 @@
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 8px; font-weight: bold;">V4</td>
       <td style="padding: 8px;">No CO id appears in any table that is not defined in Section 3.</td>
-      <td style="padding: 8px; font-weight: bold; color: #059669;">PASS</td>
-      <td style="padding: 8px; font-size: 13px; color: #475569;">No extraneous or undefined CO IDs found in mapping or assessment tables.</td>
+      <td style="padding: 8px; font-weight: bold; color: #dc2626;">FAIL</td>
+      <td style="padding: 8px; font-size: 13px; color: #475569;">Extraneous CO IDs were discovered.</td>
     </tr>
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 8px; font-weight: bold;">V5</td>
@@ -115,6 +115,12 @@
       <tbody>
         
     <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 10px; font-weight: bold; font-family: monospace; color: #4338ca;">CO_EXTRA_IN_TABLE</td>
+      <td style="padding: 10px; font-size: 13px;">spec (Sec 5) [CO-6]</td>
+      <td style="padding: 10px; font-size: 13px; color: #b91c1c;">Foreign CO 'CO-6' appears in table but is not defined in Section 3.</td>
+      <td style="padding: 10px; font-size: 13px; color: #047857; font-weight: 500;">Pruned undefined CO 'CO-6' from tables.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 10px; font-weight: bold; font-family: monospace; color: #4338ca;">PLACEHOLDER_TEXT</td>
       <td style="padding: 10px; font-size: 13px;">template</td>
       <td style="padding: 10px; font-size: 13px; color: #b91c1c;">Template contained placeholder sample course text ('Computer Vision', 'AIC304A', 'AIML', etc.).</td>
@@ -125,6 +131,18 @@
       <td style="padding: 10px; font-size: 13px;">spec (Sec 5) [PSO-3]</td>
       <td style="padding: 10px; font-size: 13px; color: #b91c1c;">Existing course spec contained obsolete or invalid 'PSO-3' column not part of the programme.</td>
       <td style="padding: 10px; font-size: 13px; color: #047857; font-weight: 500;">Eliminated PSO-3 column; preserved only official PSO-1 and PSO-2.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 10px; font-weight: bold; font-family: monospace; color: #4338ca;">CO_ASSESSMENT_MISMATCH</td>
+      <td style="padding: 10px; font-size: 13px;">spec (Sec 7) [CO-4, PO-3]</td>
+      <td style="padding: 10px; font-size: 13px; color: #b91c1c;">CO-4 has high level (3) mapping to PO-3 but lacked practical or assignment assessment.</td>
+      <td style="padding: 10px; font-size: 13px; color: #047857; font-weight: 500;">Added Lab CE and practical assessment coverage for CO-4.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 10px; font-weight: bold; font-family: monospace; color: #4338ca;">CO_ASSESSMENT_MISMATCH</td>
+      <td style="padding: 10px; font-size: 13px;">spec (Sec 7) [CO-5, PO-3]</td>
+      <td style="padding: 10px; font-size: 13px; color: #b91c1c;">CO-5 has high level (3) mapping to PO-3 but lacked practical or assignment assessment.</td>
+      <td style="padding: 10px; font-size: 13px; color: #047857; font-weight: 500;">Added Lab CE and practical assessment coverage for CO-5.</td>
     </tr>
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 10px; font-weight: bold; font-family: monospace; color: #4338ca;">SECTION_NOT_IN_TEMPLATE</td>

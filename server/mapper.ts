@@ -22,60 +22,69 @@ export function generateCoPoPsoMap(
   units: Unit[]
 ): Record<string, Record<string, CoPoPsoCell | null>> {
   const matrix: Record<string, Record<string, CoPoPsoCell | null>> = {};
+  const poList = poPsoConfig.pos || [];
+  const psoList = poPsoConfig.psos || [];
 
-  // For each CO, generate a sound academic mapping with Bloom ceiling enforcement
   for (const co of cos) {
     matrix[co.id] = {};
     const bloom = co.bloom_level || 2;
     const stmtLower = co.statement.toLowerCase();
 
-    // Map through PO-1 to PO-11
     for (let i = 1; i <= 11; i++) {
       const poId = `PO-${i}`;
+      const poDef = poList.find((p) => p.id === poId);
       let level: 1 | 2 | 3 | null = null;
       let justification = "";
 
-      if (poId === "PO-1") {
-        // Engineering knowledge applies to almost all computing fundamentals
-        level = (Math.min(bloom, 3) as 1 | 2 | 3);
-        justification = `Applies fundamental principles of engineering and computing to ${co.verb || 'address'} computational concepts.`;
-      } else if (poId === "PO-2" && (bloom >= 3 || stmtLower.includes("problem") || stmtLower.includes("computational"))) {
-        // Problem analysis
-        level = (Math.min(bloom >= 4 ? 3 : 2, bloom) as 1 | 2 | 3);
-        justification = `Formulates and analyzes structured computational problems using systematic analytical techniques.`;
-      } else if (poId === "PO-3" && (bloom >= 3 || stmtLower.includes("solve") || stmtLower.includes("develop") || stmtLower.includes("program"))) {
-        // Design/Development of solutions
-        level = (bloom >= 5 ? 3 : bloom >= 3 ? 2 : 1) as 1 | 2 | 3;
-        justification = `Designs algorithmic solutions, software components, and modular structures meeting technical requirements.`;
-      } else if (poId === "PO-4" && (bloom >= 4 || stmtLower.includes("analyze") || stmtLower.includes("evaluate"))) {
-        // Investigations
-        level = (bloom >= 5 ? 2 : 1) as 1 | 2 | 3;
-        justification = `Conducts empirical investigation and performance benchmarking of algorithmic choices.`;
-      } else if (poId === "PO-5" && (stmtLower.includes("programming") || stmtLower.includes("data structure") || stmtLower.includes("ide") || stmtLower.includes("python") || stmtLower.includes("construct"))) {
-        // Modern tool usage
+      // PO-1 (Engineering Knowledge): Applying mathematics, natural science, computing, or engineering fundamentals
+      if (poId === "PO-1" && (stmtLower.includes("fundamental") || stmtLower.includes("principle") || stmtLower.includes("mathematics") || stmtLower.includes("science") || stmtLower.includes("concept") || stmtLower.includes("theory"))) {
+        level = Math.min(bloom, 3) as 1 | 2 | 3;
+        justification = `Demonstrates ${poDef?.title || "Engineering Knowledge"} by applying foundational principles to: "${co.statement.slice(0, 85)}".`;
+      }
+      // PO-2 (Problem Analysis): Formulating, analyzing complex engineering problems, reaching substantiated conclusions
+      else if (poId === "PO-2" && (stmtLower.includes("analy") || stmtLower.includes("formulat") || stmtLower.includes("differenti") || stmtLower.includes("diagnos") || stmtLower.includes("evaluat"))) {
+        level = Math.min(bloom >= 4 ? 3 : 2, bloom) as 1 | 2 | 3;
+        justification = `Demonstrates ${poDef?.title || "Problem Analysis"} through structured analysis of complex engineering problems in: "${co.statement.slice(0, 85)}".`;
+      }
+      // PO-3 (Design/Development of Solutions): Designing creative solutions, developing systems, components, or processes
+      else if (poId === "PO-3" && (stmtLower.includes("design") || stmtLower.includes("develop") || stmtLower.includes("construct") || stmtLower.includes("synthes") || stmtLower.includes("architect"))) {
+        level = (bloom >= 5 ? 3 : 2) as 1 | 2 | 3;
+        justification = `Demonstrates ${poDef?.title || "Design / Development"} by creating solutions and components to meet defined technical requirements in: "${co.statement.slice(0, 85)}".`;
+      }
+      // PO-4 (Conduct Investigations): Research-based knowledge, design of experiments, analysis/interpretation of data
+      else if (poId === "PO-4" && (stmtLower.includes("investigat") || stmtLower.includes("experiment") || stmtLower.includes("measur") || stmtLower.includes("benchmark") || stmtLower.includes("testing"))) {
+        level = (bloom >= 4 ? 2 : 1) as 1 | 2 | 3;
+        justification = `Demonstrates ${poDef?.title || "Investigations"} through experimental inquiry, modeling, or data analysis in: "${co.statement.slice(0, 85)}".`;
+      }
+      // PO-5 (Engineering Tool Usage): Creating, selecting, and applying modern engineering and IT tools
+      else if (poId === "PO-5" && (stmtLower.includes("tool") || stmtLower.includes("software") || stmtLower.includes("apparatus") || stmtLower.includes("instrument") || stmtLower.includes("simulat") || stmtLower.includes("ide"))) {
         level = (bloom >= 3 ? 2 : 1) as 1 | 2 | 3;
-        justification = `Employs modern programming language environments, compiler tooling, and debugging IDEs.`;
-      } else if (poId === "PO-11" && (bloom >= 2)) {
-        // Lifelong learning
+        justification = `Demonstrates ${poDef?.title || "Tool Usage"} by applying appropriate engineering tools, environments, and resources in: "${co.statement.slice(0, 85)}".`;
+      }
+      // PO-11 (Life-Long Learning): Independent and life-long learning, critical thinking in broad technological change
+      else if (poId === "PO-11" && (stmtLower.includes("independent") || stmtLower.includes("self-directed") || stmtLower.includes("emerging") || stmtLower.includes("lifelong") || stmtLower.includes("literature"))) {
         level = 1;
-        justification = `Develops foundational aptitude for self-directed learning and adapting to evolving programming frameworks.`;
+        justification = `Demonstrates ${poDef?.title || "Life-Long Learning"} by fostering self-directed inquiry and continuous adaptability in: "${co.statement.slice(0, 85)}".`;
       }
 
       matrix[co.id][poId] = level ? { level, justification } : null;
     }
 
-    // Map through PSOs: PSO-1 and PSO-2 only (never PSO-3!)
     for (let j = 1; j <= 2; j++) {
       const psoId = `PSO-${j}`;
+      const psoDef = psoList.find((p) => p.id === psoId);
       let level: 1 | 2 | 3 | null = null;
       let justification = "";
 
-      if (psoId === "PSO-1") {
-        level = (Math.min(bloom, 3) as 1 | 2 | 3);
-        justification = `Applies core computer science algorithms, memory models, and data representation techniques.`;
-      } else if (psoId === "PSO-2") {
-        level = (bloom >= 4 ? 3 : bloom >= 2 ? 2 : 1) as 1 | 2 | 3;
-        justification = `Constructs and validates robust software solutions using programming idioms and standard data structures.`;
+      // PSO-1: Computing fundamentals, algorithms, data structures (config/po_pso.json)
+      if (psoId === "PSO-1" && (stmtLower.includes("algorithm") || stmtLower.includes("data structure") || stmtLower.includes("computational") || stmtLower.includes("program"))) {
+        level = Math.min(bloom, 3) as 1 | 2 | 3;
+        justification = `Directly evidences PSO-1 (${psoDef?.statement.slice(0, 60)}...) through algorithmic and computational problem solving.`;
+      }
+      // PSO-2: Design and develop software solutions (config/po_pso.json)
+      else if (psoId === "PSO-2" && (stmtLower.includes("software") || stmtLower.includes("programmatic") || stmtLower.includes("platform") || stmtLower.includes("code"))) {
+        level = (bloom >= 4 ? 3 : 2) as 1 | 2 | 3;
+        justification = `Directly evidences PSO-2 (${psoDef?.statement.slice(0, 60)}...) through software solution design and implementation.`;
       }
 
       matrix[co.id][psoId] = level ? { level, justification } : null;
@@ -90,10 +99,11 @@ export function generateComprehensiveSummary(
   units: Unit[],
   courseType: string
 ): string {
-  const unitTopics = units
-    .map((u) => u.title)
-    .filter(Boolean)
-    .join(", ");
-
-  return `This course provides a rigorous, foundational introduction to ${title}. Designed for engineering disciplines, the syllabus systematically covers ${unitTopics}. Students develop competence in algorithmic reasoning, problem formulation, structural programming idioms, control flow, functions, testing, sorting and searching algorithms, as well as foundational linear data structures (arrays, stacks, queues). Theoretical principles are closely paired with practical programming lab experiences to prepare students for multi-domain engineering computation.`;
+  const unitList = units.map((u) => `Unit ${u.number}: ${u.title}`).filter(Boolean).join("; ");
+  let summary = `This course covers ${title}. The curriculum comprises: ${unitList}.`;
+  const hasLab = units.some((u) => typeof u.lab === "string" && u.lab.trim().length > 0);
+  if (hasLab) {
+    summary += ` The syllabus includes laboratory and practical exercises.`;
+  }
+  return summary;
 }

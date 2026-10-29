@@ -100,6 +100,7 @@ export interface ParsedCourseData {
   total_hours: number;
   course_type: string;
   summary: string;
+  hasExplicitCredits?: boolean;
   course_outcomes: CourseOutcome[];
   units: Unit[];
   teaching_hours: Record<string, number>;

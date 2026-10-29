@@ -100,20 +100,13 @@ api.post(
       if (specFile) {
         specBuffer = specFile.buffer;
         specFilename = specFile.originalname;
-      } else if (fs.existsSync("sample-inputs/sample_course_spec.docx")) {
-        // Fallback to sample if run without multipart in tests
-        specBuffer = fs.readFileSync("sample-inputs/sample_course_spec.docx");
-        specFilename = "sample_course_spec.docx";
       } else {
-        throw new ApiError(400, "MISSING_SPEC", "Course specification file is required.");
+        throw new ApiError(400, "MISSING_SPEC", "Course specification file ('spec') is required.");
       }
 
       if (blueprintFile) {
         bpBuffer = blueprintFile.buffer;
         bpFilename = blueprintFile.originalname;
-      } else if (fs.existsSync("sample-inputs/sample_blueprint.doc")) {
-        bpBuffer = fs.readFileSync("sample-inputs/sample_blueprint.doc");
-        bpFilename = "sample_blueprint.doc";
       }
 
       const result = await runSpecForgePipeline({

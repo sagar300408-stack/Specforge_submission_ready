@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "check": "tsx scripts/check-output.ts",
     "verify": "tsx scripts/verify-run.ts",
+    "test": "tsx scripts/test-scenarios.ts",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },

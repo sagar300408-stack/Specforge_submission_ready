@@ -9,7 +9,12 @@ export function fillCourseTemplate(
   templateType: "integrated" | "non_lab",
   workflowStatus: string = "Draft"
 ): string {
-  const templateFileName = templateType === "integrated" ? "integrated_lab.html" : "non_lab.html";
+  const templateFileName =
+    templateType === "integrated"
+      ? "integrated_lab.html"
+      : templateType === "non_lab"
+      ? "non_lab.html"
+      : `${templateType}.html`;
   const templatePath = path.resolve(process.cwd(), "templates", templateFileName);
 
   let htmlContent = "";
@@ -119,26 +124,62 @@ export function fillCourseTemplate(
   });
 
   // Table 5: Assessment Table
-  const assessTable = $("table").eq(4);
-  assessTable.find("tr:gt(2)").remove();
-  for (const co of data.course_outcomes) {
-    const coverage = data.assessment.co_coverage[co.id] || [];
-    const hasTests = coverage.includes("Tests");
-    const hasAssign = coverage.includes("Assignments");
-    const hasLabCe = coverage.includes("Lab CE");
-    const hasWritten = coverage.includes("Written exam");
-    const hasLsee = coverage.includes("LSEE");
+  const assessTable = $("table.assessment-integrated-table, table:has(th:contains('Focus of COs'))").first();
+  if (!assessTable || assessTable.length === 0) {
+    throw new Error("Assessment table not found in template.");
+  }
 
-    assessTable.append(`
+  if (!data.assessment.components || data.assessment.components.length === 0) {
+    const thead = assessTable.find("thead");
+    const tbody = assessTable.find("tbody");
+    const emptyRow = `<tr><td colspan="10" style="text-align: center; padding: 12px; color: #dc2626; font-style: italic;">Assessment components unresolved in source document</td></tr>`;
+    if (tbody.length > 0) {
+      tbody.html(emptyRow);
+    } else {
+      assessTable.find("tr:gt(0)").remove();
+      assessTable.append(emptyRow);
+    }
+  } else {
+    const compHeaders = data.assessment.components
+      .map((c) => `<th class="static text-center" style="font-weight: bold; padding: 6px;">${c.name}<br>(${c.weight_percent}%)</th>`)
+      .join("");
+
+    const theadHtml = `
       <tr>
-        <td style="font-weight: bold; text-align: center; padding: 6px;">${co.id}</td>
-        <td style="text-align: center; padding: 4px;">${hasTests ? "X" : ""}</td>
-        <td style="text-align: center; padding: 4px;">${hasAssign ? "X" : ""}</td>
-        <td style="text-align: center; padding: 4px;">${hasLabCe ? "X" : ""}</td>
-        <td style="text-align: center; padding: 4px;">${hasWritten ? "X" : ""}</td>
-        <td style="text-align: center; padding: 4px;">${hasLsee ? "X" : ""}</td>
+        <th class="static text-center" colspan="${data.assessment.components.length + 1}">Focus of COs on each Component or Subcomponent of Evaluation</th>
       </tr>
-    `);
+      <tr>
+        <th class="static text-center" style="vertical-align: middle; font-weight: bold; padding: 6px;">Course Outcome</th>
+        ${compHeaders}
+      </tr>
+    `;
+
+    const rowsHtml = data.course_outcomes
+      .map((co) => {
+        const coverage = data.assessment.co_coverage[co.id] || [];
+        const cells = data.assessment.components
+          .map((c) => {
+            const isCovered = coverage.includes(c.name);
+            return `<td class="text-center" contenteditable="true" style="padding: 4px;">${isCovered ? "X" : ""}</td>`;
+          })
+          .join("");
+        return `
+          <tr>
+            <td class="static text-center" style="font-weight: bold; text-align: center; padding: 6px;">${co.id}</td>
+            ${cells}
+          </tr>
+        `;
+      })
+      .join("");
+
+    const thead = assessTable.find("thead");
+    const tbody = assessTable.find("tbody");
+    if (thead.length > 0 && tbody.length > 0) {
+      thead.html(theadHtml);
+      tbody.html(rowsHtml);
+    } else {
+      assessTable.empty().append(`<thead>${theadHtml}</thead><tbody>${rowsHtml}</tbody>`);
+    }
   }
 
   // Watermark management:

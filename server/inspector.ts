@@ -60,7 +60,7 @@ export function inspectCourseSpec(
         code: "MAPPING_UNSUPPORTED",
         location: { source: "spec", section: 5, refs: [coId] },
         description: `${coId} has no relation mapped to any Programme Outcome.`,
-        fix: `Mapped ${coId} to PO-1 based on core engineering domain fundamentals.`,
+        fix: `Recorded null mapping for unevidenced ${coId} and flagged for curriculum coordinator review.`,
         severity: "High",
       });
     }
@@ -149,25 +149,39 @@ export function inspectCourseSpec(
     });
   }
 
+  if (data.hasExplicitCredits === false) {
+    defects.push({
+      code: "HOURS_INCONSISTENT",
+      location: { source: "spec", section: 2 },
+      description: "Credit structure (L:T:P) missing or unresolved in source document; defaulted to '0:0:0'.",
+      fix: "Flagged missing credit hours for manual administrative verification.",
+      severity: "Medium",
+    });
+  }
+
   // V6: Continuous-evaluation plus end-exam weightages total 100%
   const totalWeight = data.assessment.components.reduce(
     (acc, curr) => acc + curr.weight_percent,
     0
   );
-  const v6Pass = Math.abs(totalWeight - 100) < 0.1;
+  const v6Pass = data.assessment.components.length > 0 && Math.abs(totalWeight - 100) < 0.1;
 
   rules.push({
     id: "V6",
     rule: "Continuous-evaluation plus end-exam weightages total 100%.",
     status: v6Pass ? "PASS" : "FAIL",
-    details: `Sum of assessment weightages = ${totalWeight}%.`,
+    details: data.assessment.components.length === 0
+      ? "No assessment components extracted or unresolved in source document."
+      : `Sum of assessment weightages = ${totalWeight}%.`,
   });
 
   if (!v6Pass) {
     defects.push({
       code: "WEIGHTAGE_INCONSISTENT",
       location: { source: "spec", section: 7 },
-      description: `Evaluation components sum to ${totalWeight}%, violating the 100% total rule.`,
+      description: data.assessment.components.length === 0
+        ? "Evaluation components missing or unresolved in source document, violating the 100% total rule."
+        : `Evaluation components sum to ${totalWeight}%, violating the 100% total rule.`,
       fix: "Normalized assessment component weightages to sum exactly to 100%.",
       severity: "High",
     });

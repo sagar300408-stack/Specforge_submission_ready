@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import * as cheerio from "cheerio";
 import type { CourseOutcome, ParsedCourseData, Unit, Assessment } from "./types.js";
 
 // Load reference Bloom's taxonomy dynamically from config/po_pso.json
@@ -39,36 +40,38 @@ export function detectBloomLevel(statement: string): { level: number; verb: stri
 
 export function parseCourseDocuments(
   specText: string,
-  blueprintText?: string | null
+  blueprintText?: string | null,
+  specHtml?: string | null
 ): ParsedCourseData {
   // 1. Course Title
-  const titleMatch = specText.match(/Course Title\s*[:\s]?\s*([^\n\r\t]+)/i);
-  const title = titleMatch ? titleMatch[1].trim() : "Course Specifications";
+  const titleMatch = specText.match(/Course Title\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+  const title = titleMatch ? titleMatch[1].trim() : "UNKNOWN_TITLE";
 
   // 2. Course Code
-  const codeMatch = specText.match(/Course Code\s*[:\s]?\s*([A-Za-z0-9]+)/i);
-  const code = codeMatch ? codeMatch[1].trim() : "CSD101";
+  const codeMatch = specText.match(/Course Code\s*[:\n\r]+\s*([A-Za-z0-9_-]+)/i) || specText.match(/\b([A-Z]{2,4}\d{3,4}[A-Z]?)\b/);
+  const code = codeMatch ? codeMatch[1].trim() : "UNKNOWN_CODE";
 
   // 3. Course Type
-  const typeMatch = specText.match(/Course Type\s*[:\s]?\s*([^\n\r\t]+)/i);
-  const course_type = typeMatch ? typeMatch[1].trim() : "Core Theory";
+  const typeMatch = specText.match(/Course Type\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+  const course_type = typeMatch ? typeMatch[1].trim() : "Core Course";
 
   // 4. Department & Faculty
-  const deptMatch = specText.match(/Department\s*[:\s]?\s*([^\n\r\t]+)/i);
-  const department = deptMatch ? deptMatch[1].trim() : "Engineering";
+  const deptMatch = specText.match(/Department\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+  const department = deptMatch ? deptMatch[1].trim() : "UNKNOWN_DEPARTMENT";
 
-  const facMatch = specText.match(/Faculty\s*[:\s]?\s*([^\n\r\t]+)/i);
-  const faculty = facMatch ? facMatch[1].trim() : "Engineering and Technology";
+  const facMatch = specText.match(/Faculty\s*[:\n\r]+\s*([^\n\r\t]+)/i);
+  const faculty = facMatch ? facMatch[1].trim() : "UNKNOWN_FACULTY";
 
   // 5. Credits LTP & Total Credits
-  const ltpMatch = specText.match(/Credit Structure[^\d]*(\d+\s*:\s*\d+\s*:\s*\d+)/i) || specText.match(/(\d:\d:\d)/);
-  const credits_ltp = ltpMatch ? ltpMatch[1].replace(/\s+/g, "") : "3:0:0";
+  const ltpMatch = specText.match(/Credit Structure[^\d]*(\d+\s*:\s*\d+\s*:\s*\d+)/i) || specText.match(/\b(\d+:\d+:\d+)\b/);
+  const hasExplicitCredits = Boolean(ltpMatch);
+  const credits_ltp = ltpMatch ? ltpMatch[1].replace(/\s+/g, "") : "0:0:0";
 
   const totalCreditsMatch = specText.match(/Number of Credits\s*[:\s]?(\d+)/i);
-  const total_credits = totalCreditsMatch ? parseInt(totalCreditsMatch[1], 10) : 4;
+  const total_credits = totalCreditsMatch ? parseInt(totalCreditsMatch[1], 10) : 0;
 
   const totalHoursMatch = specText.match(/Total Hours[^:]*[:\s]*(\d+)/i);
-  const total_hours = totalHoursMatch ? parseInt(totalHoursMatch[1], 10) : 75;
+  const total_hours = totalHoursMatch ? parseInt(totalHoursMatch[1], 10) : 0;
 
   // 6. Course Summary
   const sumIdx = specText.indexOf("Course Summary");
@@ -77,9 +80,6 @@ export function parseCourseDocuments(
     const afterSum = specText.slice(sumIdx + "Course Summary".length).trim();
     const endSum = afterSum.search(/Course Size|Number of Credits|Credit Structure/i);
     summary = endSum !== -1 ? afterSum.slice(0, endSum).trim() : afterSum.slice(0, 400).trim();
-  }
-  if (!summary) {
-    summary = "This course provides comprehensive foundations and practical methodologies for engineering students.";
   }
 
   // 7. Course Outcomes (COs)
@@ -195,25 +195,99 @@ export function parseCourseDocuments(
   };
 
   // 10. Assessment Structure
-  const assessment: Assessment = {
-    components: p > 0
-      ? [
-          { name: "Continuous Evaluation (CE)", weight_percent: 60, marks: 100 },
-          { name: "Semester End Examination (SEE)", weight_percent: 25, marks: 50 },
-          { name: "Lab Semester End Examination (LSEE)", weight_percent: 15, marks: 30 },
-        ]
-      : [
-          { name: "Continuous Evaluation (CE)", weight_percent: 60, marks: 100 },
-          { name: "Semester End Examination (SEE)", weight_percent: 40, marks: 100 },
-        ],
-    co_coverage: {
-      "CO-1": ["Tests", "Written exam"],
-      "CO-2": ["Tests", "Written exam", "Lab CE"],
-      "CO-3": ["Tests", "Written exam", "Lab CE"],
-      "CO-4": ["Assignments", "Written exam", "Lab CE"],
-      "CO-5": ["Assignments", "Lab CE", "LSEE"],
-    },
-  };
+  const components: Array<{ name: string; weight_percent: number }> = [];
+  const co_coverage: Record<string, string[]> = {};
+  course_outcomes.forEach((co) => {
+    co_coverage[co.id] = [];
+  });
+
+  // Table-preserving extraction via Mammoth HTML representation
+  let tableParsed = false;
+  if (specHtml) {
+    const $ = cheerio.load(specHtml);
+    const assessTbl = $("table:has(th:contains('Focus of COs'), td:contains('Focus of COs'))").first();
+    if (assessTbl.length > 0) {
+      const rows: string[][] = [];
+      assessTbl.find("tr").each((_, tr) => {
+        const cells = $(tr).find("th, td").map((_, el) => $(el).text().trim()).get();
+        if (cells.length > 0) rows.push(cells);
+      });
+
+      // Row 1 contains component names & weightages (e.g. CE (Weightage: 60 %), SEE (Weightage: 25 %), Lab (Weightage: 15 %))
+      const weightRow = rows.find((r) => r.some((c) => /Weightage\s*:\s*\d+\s*%/i.test(c)));
+      if (weightRow) {
+        weightRow.forEach((cellText) => {
+          const m = cellText.match(/([A-Za-z\s]+)\s*\([^\)]*Weightage\s*:\s*(\d+)\s*%\s*\)/i);
+          if (m) {
+            const label = m[1].trim();
+            const weight = parseInt(m[2], 10);
+            const standardName = label.includes("CE")
+              ? "Continuous Evaluation (CE)"
+              : label.includes("Lab")
+              ? "Lab Semester End Examination (LSEE)"
+              : "Semester End Examination (SEE)";
+            components.push({ name: standardName, weight_percent: weight });
+          }
+        });
+      }
+
+      // Row 2 contains subcomponents (e.g. Tests, Assignments, Lab CE, Written exam, LSEE: SEE)
+      const subcompRow = rows.find((r) => r.includes("Tests") || r.includes("Written exam"));
+      const colToParentComp: Array<string | null> = [];
+      if (subcompRow) {
+        subcompRow.forEach((subName) => {
+          const s = subName.toLowerCase();
+          if (s.includes("test") || s.includes("assignment") || s.includes("lab ce")) {
+            colToParentComp.push(components.find((c) => c.name.includes("Continuous"))?.name || "Continuous Evaluation (CE)");
+          } else if (s.includes("written")) {
+            colToParentComp.push(components.find((c) => c.name.includes("Semester End") && !c.name.includes("Lab"))?.name || "Semester End Examination (SEE)");
+          } else if (s.includes("lsee") || s.includes("lab exam")) {
+            colToParentComp.push(components.find((c) => c.name.includes("Lab Semester"))?.name || "Lab Semester End Examination (LSEE)");
+          } else {
+            colToParentComp.push(null);
+          }
+        });
+      }
+
+      // Map each CO row cell-by-cell based on exact column boundaries
+      rows.forEach((row) => {
+        const firstCell = row[0]?.trim();
+        if (/^CO-\d+$/i.test(firstCell)) {
+          const coId = firstCell.toUpperCase();
+          if (!co_coverage[coId]) co_coverage[coId] = [];
+          for (let colIdx = 1; colIdx < row.length; colIdx++) {
+            const cellVal = row[colIdx]?.trim().toUpperCase();
+            const parentComp = colToParentComp[colIdx - 1];
+            if (cellVal === "X" && parentComp) {
+              if (!co_coverage[coId].includes(parentComp)) {
+                co_coverage[coId].push(parentComp);
+              }
+            }
+          }
+        }
+      });
+      tableParsed = true;
+    }
+  }
+
+  // Fallback for non-HTML/plain-text inputs: Quarantined Section 7 text search
+  if (!tableParsed) {
+    const assessStartIdx = specText.indexOf("Course Assessment and Reassessment");
+    if (assessStartIdx !== -1) {
+      const afterAssess = specText.slice(assessStartIdx);
+      const endAssess = afterAssess.search(/Achieving Cos|The details of number of tests|8\.\s*Achieving/i);
+      const assessSectionText = endAssess !== -1 ? afterAssess.slice(0, endAssess) : afterAssess.slice(0, 2500);
+
+      const ceWeightMatch = assessSectionText.match(/CE\s*\([^\)]*Weightage\s*:\s*(\d+)\s*%\s*\)/i);
+      const seeWeightMatch = assessSectionText.match(/SEE\s*\([^\)]*Weightage\s*:\s*(\d+)\s*%\s*\)/i);
+      const labWeightMatch = assessSectionText.match(/Lab\s*\([^\)]*Weightage\s*:\s*(\d+)\s*%\s*\)/i);
+      if (ceWeightMatch) components.push({ name: "Continuous Evaluation (CE)", weight_percent: parseInt(ceWeightMatch[1], 10) });
+      if (seeWeightMatch) components.push({ name: "Semester End Examination (SEE)", weight_percent: parseInt(seeWeightMatch[1], 10) });
+      if (labWeightMatch) components.push({ name: "Lab Semester End Examination (LSEE)", weight_percent: parseInt(labWeightMatch[1], 10) });
+    }
+  }
+
+  const assessment: Assessment = { components, co_coverage };
 
   return {
     title,
@@ -229,6 +303,7 @@ export function parseCourseDocuments(
     units,
     teaching_hours,
     assessment,
+    hasExplicitCredits,
     raw_text: specText,
     blueprint_used,
   };
