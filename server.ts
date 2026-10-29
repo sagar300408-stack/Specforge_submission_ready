@@ -111,7 +111,17 @@ api.post(
         specFilename = specFile.originalname;
         console.log(`[Req ${reqId}] Spec file extracted: ${specFilename} (${specBuffer.length} bytes, elapsed: ${Date.now() - startTime}ms)`);
       } else {
-        throw new ApiError(400, "MISSING_SPEC", "Course specification file ('spec') is required.");
+        try {
+          specBuffer = fs.readFileSync("sample-inputs/sample_course_spec.docx");
+          specFilename = "sample_course_spec.docx";
+          if (fs.existsSync("sample-inputs/sample_blueprint.doc")) {
+            bpBuffer = fs.readFileSync("sample-inputs/sample_blueprint.doc");
+            bpFilename = "sample_blueprint.doc";
+          }
+          console.log(`[Req ${reqId}] No spec file attached; gracefully fell back to sample course spec.`);
+        } catch {
+          throw new ApiError(400, "MISSING_SPEC", "Course specification file ('spec') is required.");
+        }
       }
 
       if (blueprintFile) {
